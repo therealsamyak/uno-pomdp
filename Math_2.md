@@ -59,25 +59,33 @@ $$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t) \in \Omega$$
 
 The action space consists of playing a card from the hand or drawing from the draw deck.
 
-$$\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}$$
+$$
+\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}
+$$
 
 **Play Actions:**
 
-$$\mathcal{A}_{\text{play}} = K$$
+$$
+\mathcal{A}_{\text{play}} = K
+$$
 
-where $K = \{K_1, K_2, \ldots, K_{76}\}$ is the set of all uniquely labeled cards. A play action $c \in \mathcal{A}_{\text{play}}$ is executed only if $c \in H_1^t$ (Player 1's hand) and matches the top card $c_{\text{top}}$ in color ($\text{color}(c) = \text{color}(c_{\text{top}})$) or rank ($\text{rank}(c) = \text{rank}(c_{\text{top}})$).
+where $$ K = \{K_1, K_2, \ldots, K_{76}\} $$ is the set of all uniquely labeled cards. A play action $$ c \in \mathcal{A}_{\text{play}} $$ is executed only if $$ c \in H_1^t $$ (Player 1's hand) and matches the top card $$ c_{\text{top}} $$ in color ($$ \text{color}(c) = \text{color}(c_{\text{top}}) $$) or rank ($$ \text{rank}(c) = \text{rank}(c_{\text{top}}) $$).
 
 **Draw Action:**
 
-$$\mathcal{A}_{\text{draw}} = \{\text{Draw}\}$$
+$$
+\mathcal{A}_{\text{draw}} = \{\text{Draw}\}
+$$
 
-Executing Draw samples a card $k$ uniformly at random from $D^t$ (with probability $1/|D^t|$ for each $k \in D^t$) and adds it to $H_1^t$. If the drawn $k$ matches $c_{\text{top}}$ in color or rank, the player may choose to play it immediately as a play action; otherwise, the turn ends.
+Executing Draw samples a card $$ k $$ uniformly at random from $$ D^t $$ (with probability $$ 1/|D^t| $$ for each $$ k \in D^t $$) and adds it to $$ H_1^t $$. If the drawn $$ k $$ matches $$ c_{\text{top}} $$ in color or rank, the player may choose to play it immediately as a play action; otherwise, the turn ends.
 
 **Legal Action Set:**
 
-For a state $s_t$ with $\text{turn}^t = 1$:
+For a state $$ s_t $$ with $$ \text{turn}^t = 1 $$:
 
-$$\mathcal{A}_{\text{legal}}(s_t) = \{ c \in H_1^t \mid \text{color}(c) = \text{color}(c_{\text{top}}) \lor \text{rank}(c) = \text{rank}(c_{\text{top}}) \} \cup \{\text{Draw}\}$$
+$$
+\mathcal{A}_{\text{legal}}(s_t) = \{ c \in H_1^t \mid \text{color}(c) = \text{color}(c_{\text{top}}) \lor \text{rank}(c) = \text{rank}(c_{\text{top}}) \} \cup \{\text{Draw}\}
+$$
 
 The Draw action is always available, even if play actions exist. If no play actions are available, only Draw is legal.
 
