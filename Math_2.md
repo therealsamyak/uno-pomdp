@@ -27,7 +27,7 @@ $$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t) \in \mathcal{S}$$
 - $H_i^t \subseteq K$: Player $i$'s hand (multiset)
 - $D^t \subseteq K$: Draw deck (multiset, unordered). When drawing, sample uniformly at random from $D^t$.
 - $P^t \subseteq K$: Discard pile (multiset, unordered). The top card $c_{\text{top}}$ is explicitly tracked in $T^t$; the rest $P^t \setminus \{c_{\text{top}}\}$ is unordered.
-- $T^t = (c_{\text{top}}, \tilde{c}) \in K$: Active top card and declared color
+- $T^t = c_{\text{top}} \in K$: Active top card and declared color
   - $c_{\text{top}}$ is the card on top of the discard pile (used for playability rules)
 - $\text{turn}^t \in \{1, 2\}$: Active player
 
