@@ -18,7 +18,9 @@
 
 - Time: $t \in \mathbb{N}_0 = \{0, 1, 2, \ldots\}$
 - Players: $\mathcal{P} = \{1, 2\}$ where Player 1 is the agent
-- Indicator: $\mathbb{1}[\cdot] \in \{0, 1\}$
+- Indicator: $\mathbb{1}[\cdot] \in \{0, 1\}$ (also called Iverson bracket)
+  - $\mathbb{1}[\text{condition}] = 1$ if condition is true, $0$ if false
+  - Example: $\mathbb{1}[x > 5] = 1$ if $x > 5$, otherwise $0$
 
 ---
 
@@ -30,19 +32,18 @@ $$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t, \text{meta}^t) \in \mathcal
 **Components:**
 
 - $H_i^t \subseteq K$: Player $i$'s hand (multiset)
-- $D^t = (d_1, d_2, \ldots, d_{n_d}) \in K^{n_d}$: Ordered draw deck (top = $d_1$)
-- $P^t = (p_1, p_2, \ldots, p_{n_p}) \in K^{n_p}$: Ordered discard pile (top = $p_{n_p}$, bottom = $p_1$)
+- $D^t \subseteq K$: Draw deck (multiset, unordered). When drawing, sample uniformly at random from $D^t$.
+- $P^t \subseteq K$: Discard pile (multiset, unordered). The top card $c_{\text{top}}$ is explicitly tracked in $T^t$; the rest $P^t \setminus \{c_{\text{top}}\}$ is unordered.
 - $T^t = (c_{\text{top}}, \tilde{c}) \in K \times (\mathcal{C} \cup \{\perp\})$: Active top card and declared color
+  - $c_{\text{top}}$ is the card on top of the discard pile (used for playability rules)
   - If $c_{\text{top}}$ is not wild, then $\tilde{c} = \text{color}(c_{\text{top}})$
   - If $c_{\text{top}}$ is wild, $\tilde{c} \in \mathcal{C}$ is the declared color
 - $\text{turn}^t \in \{1, 2\}$: Active player
-- $\text{meta}^t = (n_{\text{draw}}, \text{dir}) \in \mathbb{N}_0 \times \{1, -1\}$:
-  - $n_{\text{draw}}$: Accumulated draw penalty (from +2 or Wild+4)
-  - $\text{dir}$: Direction (irrelevant in 2-player; included for completeness)
+- $\text{meta}^t = n_{\text{draw}} \in \mathbb{N}_0$: Accumulated draw penalty (from +2 or Wild+4)
 
 **State Consistency Constraint:**
-$$H_1^t \cup H_2^t \cup \{d_i : i \in [n_d]\} \cup \{p_i : i \in [n_p]\} \cup \{c_{\text{top}}\} = K$$
-(partition of full deck, accounting for multiplicities)
+$$H_1^t \cup H_2^t \cup D^t \cup P^t = K$$
+(partition of full deck, accounting for multiplicities). Note: $c_{\text{top}} \in P^t$ (it's the top card of the discard pile).
 
 **Terminal States:**
 $$\mathcal{S}_{\text{term}} = \{s \in \mathcal{S} : |H_1| = 0 \text{ or } |H_2| = 0\}$$
@@ -59,7 +60,7 @@ $$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t, \text{meta}_{\text{obs}}^t) \in \Omega$$
 - $H_1^t$: Player 1's hand (fully observed)
 - $n_2^t = |H_2^t| \in \mathbb{N}_0$: Opponent's hand size
 - $n_d^t = |D^t| \in \mathbb{N}_0$: Draw deck size
-- $P^t$: Full discard pile (visible)
+- $P^t$: Discard pile multiset (visible)
 - $T^t$: Top card and declared color (visible)
 - $\text{meta}_{\text{obs}}^t = n_{\text{draw}}$: Observable metadata
 
@@ -91,7 +92,7 @@ For state $s_t$ with Player 1's turn ($\text{turn}^t = 1$), define $\mathcal{A}_
 $$
 \mathcal{A}_{\text{legal}}(s_t) = \begin{cases}
 \{(c, \tilde{c}) : c \in H_1^t, \text{playable}(c, T^t)\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} = 0 \\
-\{(c, \perp) : c \in H_1^t, \text{rank}(c) \in \{\text{+2}, \text{Wild+4}\}\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} > 0
+\{\text{Draw}\} & \text{if } n_{\text{draw}} > 0
 \end{cases}
 $$
 
@@ -109,7 +110,7 @@ $$
 **2-Player Special Rules:**
 
 - Reverse acts as Skip (ends turn immediately)
-- No stacking of draw penalties
+- No stacking of draw penalties: When $n_{\text{draw}} > 0$, only Draw is legal (cannot play +2 or Wild+4 to increase penalty)
 - No challenging Wild+4
 
 ---
@@ -127,10 +128,12 @@ If $a_t = \text{Draw}$:
 
 1. Determine draw count: $k = \max(1, n_{\text{draw}})$
 2. If $|D^t| < k$: **Reshuffle**
-   - Let $D' = \text{shuffle}(p_1, \ldots, p_{n_p - 1})$ (all discard except top)
-   - Set $D^{t+} = D' \circ D^t$ (concatenate), $P^{t+} = (p_{n_p})$
-3. Draw top $k$ cards from $D^{t+}$: $(d_1, \ldots, d_k)$
-4. Update: $H_1^{t+} = H_1^t \cup \{d_1, \ldots, d_k\}$, $D^{t+} = (d_{k+1}, \ldots)$
+   - Combine discard (except top card) with deck: $D^{t+} = (P^t \setminus \{c_{\text{top}}\}) \cup D^t$
+   - Set $P^{t+} = \{c_{\text{top}}\}$
+     Else: $D^{t+} = D^t$, $P^{t+} = P^t$
+3. Since $D^{t+}$ is unordered (multiset), sample $k$ cards uniformly at random without replacement from $D^{t+}$: $\{d_1, \ldots, d_k\}$
+   - Each $k$-subset of $D^{t+}$ has equal probability $\frac{1}{\binom{|D^{t+}|}{k}}$
+4. Update: $H_1^{t+} = H_1^t \cup \{d_1, \ldots, d_k\}$, $D^{t+} = D^{t+} \setminus \{d_1, \ldots, d_k\}$
 5. Reset penalty: $n_{\text{draw}}^{t+} = 0$
 6. **Forced end turn**: $\text{turn}^{t+} = 2$
 
@@ -139,7 +142,7 @@ If $a_t = \text{Draw}$:
 1. Remove from hand: $H_1^{t+} = H_1^t \setminus \{c\}$
 2. Update top card: $T^{t+} = (c, \tilde{c}')$ where
    $$\tilde{c}' = \begin{cases} \tilde{c} & \text{if } \text{rank}(c) \in \mathcal{W} \\ \text{color}(c) & \text{otherwise} \end{cases}$$
-3. Add to discard: $P^{t+} = P^t \circ (c)$
+3. Add to discard: $P^{t+} = P^t \cup \{c\}$
 4. Handle card effects:
    - **+2**: $n_{\text{draw}}^{t+} = n_{\text{draw}}^t + 2$, $\text{turn}^{t+} = 2$
    - **Wild+4**: $n_{\text{draw}}^{t+} = n_{\text{draw}}^t + 4$, $\text{turn}^{t+} = 2$
@@ -152,7 +155,16 @@ State after Player 1's action: $s^{t+} = (H_1^{t+}, H_2^t, D^{t+}, P^{t+}, T^{t+
 
 If $\text{turn}^{t+} = 2$ and $|H_2^{t+}| > 0$:
 
-Player 2 selects action $a_2 \sim \pi_2(\cdot \mid s^{t+})$ from $\mathcal{A}_{\text{legal}}(s^{t+})$, yielding $s_{t+1}$.
+Player 2 selects action $a_2 \sim \pi_2(\cdot \mid s^{t+})$ from $\mathcal{A}_{\text{legal}}(s^{t+})$.
+
+**Player 2's transitions follow the same rules as Player 1** (Section 5.1), but applied to Player 2:
+
+- If $a_2 = \text{Draw}$: Draw $k = \max(1, n_{\text{draw}})$ cards, reset penalty, set $\text{turn} = 1$
+- If $a_2 = (c, \tilde{c})$: Remove $c$ from $H_2$, update $T$ and $P$, handle card effects, set turn accordingly
+
+After Player 2's action completes, the resulting state is $s_{t+1}$.
+
+**Terminal Check:** After any player's action, if $|H_1| = 0$ or $|H_2| = 0$, the game terminates.
 
 The opponent policy $\pi_2$ is a probability distribution over legal actions. Common models:
 
@@ -176,14 +188,16 @@ $$P(s_{t+1} \mid s_t, a_t) = \sum_{s^{t+}} \sum_{a_2} P(s_{t+1} \mid s^{t+}, a_2
 
 where:
 
-- $P(s^{t+} \mid s_t, a_t)$ is deterministic given draw randomness:
+- $P(s^{t+} \mid s_t, a_t)$ accounts for randomness in drawing:
 
   $$
   P(s^{t+} \mid s_t, a_t) = \begin{cases}
-  \frac{1}{|D^t|!} & \text{if reshuffle occurs (uniform over permutations)} \\
-  1 & \text{otherwise (deterministic)}
+  \frac{1}{\binom{|D^{t+}|}{k}} & \text{if } a_t = \text{Draw} \text{ and drawing } k \text{ cards (uniform over } k\text{-subsets)} \\
+  1 & \text{if } a_t \text{ is playing a card (deterministic)}
   \end{cases}
   $$
+
+  where $|D^{t+}| = |D^t|$ if no reshuffle, or $|D^{t+}| = |P^t| - 1 + |D^t|$ if reshuffle occurred.
 
 - $P(s_{t+1} \mid s^{t+}, a_2)$ similarly accounts for Player 2's draw randomness
 
@@ -204,17 +218,12 @@ $$b_t(s) = \mathbb{1}[H_1 = H_1^t, P = P^t, T = T^t] \cdot b_t(H_2, D)$$
 where we maintain a marginal belief over unknown components:
 $$b_t(H_2, D) = P(H_2^t = H_2, D^t = D \mid h_t)$$
 
-**Further Marginalization (Common Approximation):**
-
-Often we ignore deck ordering and represent:
-$$b_t(H_2, \mathcal{D}) = P(H_2^t = H_2, D^t \sim \text{Unif}(\mathcal{D}) \mid h_t)$$
-
-where $\mathcal{D}$ is the multiset of cards in the draw deck.
+Since $D^t$ is a multiset (unordered), $D$ represents the multiset of cards in the draw deck.
 
 **Practical Representation:**
 
-Define the **unseen pool**:
-$$U_t = K \setminus (H_1^t \cup P^t \cup \{c_{\text{top}}\})$$
+Define the **unseen pool** (cards not in Player 1's hand or discard pile):
+$$U_t = K \setminus (H_1^t \cup P^t)$$
 
 with $|U_t| = m_t$. Then belief over opponent's hand:
 $$b_t^H(H_2) = P(H_2^t = H_2 \mid h_t), \quad H_2 \subseteq U_t, |H_2| = n_2^t$$
@@ -238,17 +247,17 @@ $$b_{t+1}(s') = \frac{P(o_{t+1} \mid s') \cdot \bar{b}_{t+1}(s')}{\sum_{\tilde{s
 
 ### 7.3. Opponent Play Observation
 
-When Player 2 plays card $c_2$ (observed in $o_{t+1}$):
+When Player 2 plays card $c_2$ (observed in $o_{t+1}$ via $T^{t+1} = (c_2, \tilde{c}_2)$ and $n_2^{t+1} = n_2^t - 1$):
 
 For each hypothesis $H_2$ in belief support, the likelihood is:
-$$P(\text{play } c_2 \mid H_2, s^{t+}) = \mathbb{1}[c_2 \in H_2] \cdot \pi_2((c_2, \cdot) \mid s^{t+})$$
+$$P(\text{play } c_2 \mid H_2, s^{t+}) = \mathbb{1}[c_2 \in H_2] \cdot \pi_2((c_2, \tilde{c}_2) \mid s^{t+})$$
 
 Updated belief over new hands $H_2' = H_2 \setminus \{c_2\}$:
 $$b_{t+1}(H_2') \propto \sum_{H_2 : H_2 \setminus \{c_2\} = H_2'} P(\text{play } c_2 \mid H_2, s^{t+}) \cdot b_t(H_2)$$
 
 ### 7.4. Opponent Draw Observation
 
-When Player 2 draws $k$ cards (unobserved specific cards):
+When Player 2 draws $k$ cards (inferred from $n_2^{t+1} = n_2^t + k$ and no card played, i.e., $T^{t+1} = T^t$):
 
 For each prior hypothesis $H_2$ with $|H_2| = n_2$:
 $$P(H_2' \mid H_2, \text{draw } k) = \frac{\mathbb{1}[H_2' \supseteq H_2, |H_2' \setminus H_2| = k, H_2' \setminus H_2 \subseteq U_t \setminus H_2]}{\binom{|U_t \setminus H_2|}{k}}$$
@@ -260,30 +269,45 @@ $$b_{t+1}(H_2') = \sum_{H_2} P(H_2' \mid H_2, \text{draw } k) \cdot b_t(H_2)$$
 
 ---
 
-## 8. Initial Belief $b_0$
+## 8. Initial State and Belief $b_0$
 
-At $t = 0$, Player 1 observes their initial hand $H_1^0$ and top card $T^0$. The initial belief is uniform over all consistent deals:
+### 8.1. Initial Game Setup
 
-$$b_0(s) \propto \mathbb{1}[\text{s is consistent with } (H_1^0, T^0, P^0 = \emptyset, n_2^0 = 7, n_d^0)]$$
+At $t = 0$, the game is initialized as follows:
+
+1. **Deal:** Shuffle deck $K$ uniformly. Deal 7 cards to each player: $H_1^0$ and $H_2^0$ (each of size 7).
+2. **Top Card:** Draw one card from remaining deck to start discard pile: $c_{\text{top}}^0$. If it's a Wild or Wild+4, reshuffle and redraw.
+3. **Initial State:** $s_0 = (H_1^0, H_2^0, D^0, P^0, T^0, \text{turn}^0 = 1, n_{\text{draw}}^0 = 0)$
+   - $D^0 = K \setminus (H_1^0 \cup H_2^0 \cup \{c_{\text{top}}^0\})$ (remaining deck)
+   - $P^0 = \{c_{\text{top}}^0\}$ (discard pile contains only top card)
+   - $T^0 = (c_{\text{top}}^0, \text{color}(c_{\text{top}}^0))$ (or declared color if wild)
+
+### 8.2. Initial Belief Distribution
+
+Player 1 observes their initial hand $H_1^0$ and top card $T^0$. The initial belief is uniform over all consistent deals:
+
+$$b_0(s) \propto \mathbb{1}[\text{s is consistent with } (H_1^0, T^0, P^0 = \{c_{\text{top}}^0\}, n_2^0 = 7, n_d^0 = |D^0|)]$$
 
 Specifically, for the unseen pool $U_0$ with $|U_0| = m_0$:
 $$b_0^H(H_2) = \frac{\mathbb{1}[H_2 \subseteq U_0, |H_2| = 7]}{\binom{m_0}{7}}$$
 
-and draw deck is uniformly distributed over $(m_0 - 7)!$ permutations of $U_0 \setminus H_2$.
+and draw deck is uniformly distributed as multiset $D^0 = U_0 \setminus H_2$.
 
 ---
 
 ## 9. Reward Function $R$
 
-Define immediate reward for Player 1:
+Define immediate reward for Player 1 (evaluated on the state after action $a$):
 
 $$
-R(s, a) = \begin{cases}
-+1 & \text{if } s \text{ results in } |H_1| = 0 \text{ (Player 1 wins)} \\
--1 & \text{if } s \text{ results in } |H_2| = 0 \text{ (Player 2 wins)} \\
+R(s', a) = \begin{cases}
++1 & \text{if } |H_1| = 0 \text{ in state } s' \text{ (Player 1 wins)} \\
+-1 & \text{if } |H_2| = 0 \text{ in state } s' \text{ (Player 2 wins)} \\
 0 & \text{otherwise}
 \end{cases}
 $$
+
+where $s'$ is the state reached after executing action $a$ in state $s$.
 
 Expected reward under belief:
 $$R(b_t, a_t) = \sum_{s \in \mathcal{S}} b_t(s) \cdot R(s, a_t)$$
@@ -313,32 +337,37 @@ $$\pi^*(b) = \arg\max_{a \in \mathcal{A}} Q^*(b, a)$$
 
 ---
 
-## 11. Computational Methods
+## 11. Belief Tracking Methods
 
-### 11.1. Particle Filter Representation
+Since the state space is large (due to opponent hand and deck uncertainty), we use approximate belief tracking. Two approaches:
 
-Approximate belief $b_t$ with $N$ particles:
+### 11.1. Exact Bayes Filter (Discrete)
+
+For tractable state spaces, maintain exact belief distribution:
+
+**Prediction Step:**
+$$\bar{b}_{t+1}(s') = \sum_{s \in \mathcal{S}} P(s' \mid s, a_t) \cdot b_t(s)$$
+
+**Update Step:**
+$$b_{t+1}(s') = \frac{P(o_{t+1} \mid s') \cdot \bar{b}_{t+1}(s')}{\sum_{\tilde{s} \in \mathcal{S}} P(o_{t+1} \mid \tilde{s}) \cdot \bar{b}_{t+1}(\tilde{s})}$$
+
+**Limitation:** Requires enumerating all states in belief support, which grows exponentially with opponent hand size.
+
+### 11.2. Particle Filter (Approximate)
+
+Approximate belief $b_t$ with $N$ weighted particles:
 $$b_t \approx \{(s^{(i)}, w^{(i)})\}_{i=1}^N, \quad \sum_{i=1}^N w^{(i)} = 1$$
 
-**Prediction:** For each particle $s^{(i)}$, sample $s'^{(i)} \sim P(\cdot \mid s^{(i)}, a_t)$
+**Algorithm:**
 
-**Update:** Weight by observation likelihood: $w'^{(i)} = w^{(i)} \cdot P(o_{t+1} \mid s'^{(i)})$
+1. **Prediction:** For each particle $s^{(i)}$, sample successor state $s'^{(i)} \sim P(\cdot \mid s^{(i)}, a_t)$
+2. **Update:** Weight by observation likelihood: $w'^{(i)} = w^{(i)} \cdot P(o_{t+1} \mid s'^{(i)})$
+3. **Normalize:** $\tilde{w}^{(i)} = \frac{w'^{(i)}}{\sum_j w'^{(j)}}$
+4. **Resampling:** Sample $N$ new particles from $\{(s'^{(i)}, \tilde{w}^{(i)})\}$ to prevent weight degeneracy
 
-**Resampling:** Normalize weights and resample to prevent degeneracy
+**Advantages:** Handles large state spaces efficiently; fixed computational cost $O(N)$ per update.
 
-### 11.2. POMCP (Partially Observable Monte Carlo Planning)
-
-Build a belief tree using Monte Carlo sampling:
-
-1. **Selection:** Traverse tree using UCB until reaching a leaf
-2. **Expansion:** Add new action node
-3. **Simulation:** Rollout from current belief using rollout policy
-4. **Backpropagation:** Update Q-values along the path
-
-UCB action selection:
-$$a^* = \arg\max_{a} \left\{Q(h, a) + c \sqrt{\frac{\ln N(h)}{N(h, a)}}\right\}$$
-
-where $h$ is the history node, $N(h)$ is visit count, $Q(h, a)$ is average return.
+**Note:** Monte Carlo planning methods (e.g., POMCP) are excluded for now; focus is on belief tracking only.
 
 ---
 
