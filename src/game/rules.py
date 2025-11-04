@@ -4,7 +4,6 @@ Game rules for 2-player UNO POMDP.
 Follows MATH.md §4: Action Space (playability and legal actions)
 """
 
-from typing import Optional
 
 from ..core import Action, Card, Color, DrawAction, GameState, PlayAction, Rank
 

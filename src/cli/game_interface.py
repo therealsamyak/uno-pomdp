@@ -2,10 +2,9 @@
 CLI game interface for playing UNO against the AI.
 """
 
-import sys
 from typing import Optional
 
-from ..core import Action, Color, DrawAction, PlayAction, create_play_action
+from ..core import Action
 from ..game import get_legal_actions
 from ..models import HeuristicPolicy
 from ..pomdp import UNOPOMDP

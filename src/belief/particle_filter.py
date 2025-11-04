@@ -114,7 +114,7 @@ class ParticleFilter:
                 # Apply Player 1's action (may have stochasticity from drawing)
                 new_state = apply_action(particle.state, action)
                 new_particles.append(Particle(new_state, particle.weight))
-            except Exception as e:
+            except Exception:
                 # If action fails (e.g., insufficient cards), particle gets zero weight
                 # We keep it for now but it will be filtered in update
                 continue

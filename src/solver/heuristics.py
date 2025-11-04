@@ -5,7 +5,7 @@ Follows MATH.md §13: Heuristic Value Approximations
 """
 
 from ..belief import ParticleFilter, expected_playable_cards_in_opponent_hand
-from ..core import Card, Color, Rank
+from ..core import Card, Rank
 
 
 def hand_size_difference(belief: ParticleFilter) -> float:

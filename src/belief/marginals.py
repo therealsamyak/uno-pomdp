@@ -4,9 +4,8 @@ Tractable marginal computations for belief state.
 Follows MATH.md §12: Tractable Marginal Computations
 """
 
-from typing import Callable
 
-from ..core import Card, Color, GameState, TopCard
+from ..core import Card, Color, TopCard
 from ..game import is_playable
 
 

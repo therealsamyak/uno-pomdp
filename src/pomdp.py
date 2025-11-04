@@ -11,14 +11,12 @@ from typing import Optional
 
 from .core import (
     Action,
-    Card,
-    Color,
     GameState,
     Observation,
     TopCard,
     generate_deck,
 )
-from .game import apply_action, compute_reward, get_legal_actions
+from .game import apply_action, compute_reward
 from .models import HeuristicPolicy, Policy
 from .solver import OnlinePOMDPPlanner, ValueIterationSolver
 
@@ -176,7 +174,7 @@ class UNOPOMDP:
         # Apply Player 1's action
         try:
             new_state = apply_action(self.state, action)
-        except Exception as e:
+        except Exception:
             # Action failed, game ends with penalty
             return self.state, self._create_observation(self.state), -10.0, True, None
 
@@ -194,7 +192,7 @@ class UNOPOMDP:
             opponent_action = self.opponent_policy.select_action(new_state)
             try:
                 new_state = apply_action(new_state, opponent_action)
-            except Exception as e:
+            except Exception:
                 # If action fails, game ends
                 pass
 
@@ -288,7 +286,7 @@ class UNOPOMDP:
                 winner = 0
 
         if verbose:
-            print(f"\n=== Game Over ===")
+            print("\n=== Game Over ===")
             print(f"Winner: Player {winner if winner > 0 else 'Draw'}")
             print(f"Turns: {turn_count}")
 

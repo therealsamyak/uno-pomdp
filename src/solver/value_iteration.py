@@ -4,7 +4,7 @@ Value iteration solver for UNO POMDP.
 Follows MATH.md §10: Value Function and Bellman Optimality
 """
 
-from typing import Callable, Optional
+from typing import Optional
 
 from ..belief import ParticleFilter, update_belief
 from ..core import Action, Observation
@@ -129,7 +129,6 @@ class ValueIterationSolver:
 
                 # Otherwise, estimate future value
                 # For simplicity, use heuristic (full rollout would be too expensive)
-                from .heuristics import heuristic_value
 
                 # Create temporary belief for next state
                 future_value = 0.0  # Simplified

@@ -5,7 +5,6 @@ Follows MATH.md §2: State Space
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .cards import Card, Color
 
