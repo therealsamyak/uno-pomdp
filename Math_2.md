@@ -14,28 +14,22 @@
 
 - Time: $t \in \mathbb{N}_0 = \{0, 1, 2, \ldots\}$
 - Players: $\mathcal{P} = \{1, 2\}$ where Player 1 is the agent
-- Indicator: $\mathbb{1}[\cdot] \in \{0, 1\}$ (also called Iverson bracket)
-  - $\mathbb{1}[\text{condition}] = 1$ if condition is true, $0$ if false
-  - Example: $\mathbb{1}[x > 5] = 1$ if $x > 5$, otherwise $0$
 
 ---
 
 ## 2. State Space $\mathcal{S}$
 
 A complete state is a tuple:
-$$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t, \text{meta}^t) \in \mathcal{S}$$
+$$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t) \in \mathcal{S}$$
 
 **Components:**
 
 - $H_i^t \subseteq K$: Player $i$'s hand (multiset)
 - $D^t \subseteq K$: Draw deck (multiset, unordered). When drawing, sample uniformly at random from $D^t$.
 - $P^t \subseteq K$: Discard pile (multiset, unordered). The top card $c_{\text{top}}$ is explicitly tracked in $T^t$; the rest $P^t \setminus \{c_{\text{top}}\}$ is unordered.
-- $T^t = (c_{\text{top}}, \tilde{c}) \in K \times (\mathcal{C} \cup \{\perp\})$: Active top card and declared color
+- $T^t = (c_{\text{top}}, \tilde{c}) \in K$: Active top card and declared color
   - $c_{\text{top}}$ is the card on top of the discard pile (used for playability rules)
-  - If $c_{\text{top}}$ is not wild, then $\tilde{c} = \text{color}(c_{\text{top}})$
-  - If $c_{\text{top}}$ is wild, $\tilde{c} \in \mathcal{C}$ is the declared color
 - $\text{turn}^t \in \{1, 2\}$: Active player
-- $\text{meta}^t = n_{\text{draw}} \in \mathbb{N}_0$: Accumulated draw penalty (from +2 or Wild+4)
 
 **State Consistency Constraint:**
 $$H_1^t \cup H_2^t \cup D^t \cup P^t = K$$
@@ -49,7 +43,7 @@ $$\mathcal{S}_{\text{term}} = \{s \in \mathcal{S} : |H_1| = 0 \text{ or } |H_2| 
 ## 3. Observation Space $\Omega$
 
 Player 1's observation at time $t$:
-$$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t, \text{meta}_{\text{obs}}^t) \in \Omega$$
+$$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t) \in \Omega$$
 
 **Components:**
 
@@ -58,11 +52,6 @@ $$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t, \text{meta}_{\text{obs}}^t) \in \Omega$$
 - $n_d^t = |D^t| \in \mathbb{N}_0$: Draw deck size
 - $P^t$: Discard pile multiset (visible)
 - $T^t$: Top card and declared color (visible)
-- $\text{meta}_{\text{obs}}^t = n_{\text{draw}}$: Observable metadata
-
-**Observation Likelihood:**
-$$P(o_t \mid s_t) = \mathbb{1}[\text{proj}(s_t) = o_t]$$
-where $\text{proj}(s_t)$ extracts the visible components from $s_t$.
 
 ---
 
@@ -71,7 +60,7 @@ where $\text{proj}(s_t)$ extracts the visible components from $s_t$.
 $$\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}$$
 
 **Play Actions:**
-$$\mathcal{A}_{\text{play}} = \{(c, \tilde{c}) : c \in H_1^t, \tilde{c} \in \mathcal{C} \cup \{\perp\}\}$$
+$$\mathcal{A}_{\text{play}} = c$$
 
 - For non-wild cards $c$: $\tilde{c}$ is ignored (set to $\perp$)
 - For wild cards $c$: $\tilde{c} \in \mathcal{C}$ is the declared color
