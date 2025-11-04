@@ -5,14 +5,10 @@
 **Card Universe**
 
 - Colors: $\mathcal{C} = \{\text{red}, \text{yellow}, \text{blue}, \text{green}\}$
-- Ranks: $\mathcal{R} = \{0, 1, 2, \ldots, 9, \text{Skip}, \text{Reverse}, \text{+2}\}$
-- Wild cards: $\mathcal{W} = \{\text{Wild}, \text{Wild+4}\}$
-- Labeled deck: $K = \{K_1, K_2, \ldots, K_{108}\}$ where each $K_i$ is uniquely labeled
+- Ranks: $\mathcal{R} = \{0, 1, 2, \ldots, 9}$
+
+- Labeled deck: $K = \{K_1, K_2, \ldots, K_{76}\}$ where each $K_i$ is uniquely labeled
   - 76 colored number cards: 1 zero per color, 2 each of 1-9 per color
-  - 24 colored action cards: 2 each of Skip, Reverse, +2 per color
-  - 4 Wild, 4 Wild+4
-- Card attributes: $\text{color}: K \to \mathcal{C} \cup \{\perp\}$, $\text{rank}: K \to \mathcal{R} \cup \mathcal{W}$
-  - Wild cards have $\text{color}(k) = \perp$
 
 **Temporal and Logical Primitives**
 
