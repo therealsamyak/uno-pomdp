@@ -52,7 +52,7 @@ def main():
     # Test 3: Game initialization
     print("\n[Test 3] Game Initialization")
     state, obs = pomdp.initialize_game()
-    print(f"✓ Initialized game:")
+    print("✓ Initialized game:")
     print(f"  - Player 1 hand: {len(state.hand_1)} cards")
     print(f"  - Player 2 hand: {len(state.hand_2)} cards")
     print(f"  - Deck: {len(state.deck)} cards")
@@ -72,7 +72,7 @@ def main():
     # Test 5: Game step
     print("\n[Test 5] Game Step Execution")
     new_state, new_obs, reward, done, opponent_action = pomdp.step_player_1(action)
-    print(f"✓ Executed action:")
+    print("✓ Executed action:")
     print(f"  - Reward: {reward}")
     print(f"  - Game over: {done}")
     print(f"  - New state turn: Player {new_state.turn}")
@@ -87,7 +87,7 @@ def main():
         num_particles=100,
     )
     winner, num_turns = pomdp2.play_full_game(verbose=False)
-    print(f"✓ Completed full game:")
+    print("✓ Completed full game:")
     print(f"  - Winner: Player {winner if winner > 0 else 'Draw'}")
     print(f"  - Turns: {num_turns}")
 

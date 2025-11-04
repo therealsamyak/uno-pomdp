@@ -33,11 +33,11 @@ def run_benchmark(
     print("\n" + "=" * 70)
     print("UNO POMDP Benchmark - Nash Equilibrium Test")
     print("=" * 70)
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  - Games: {num_games}")
     print(f"  - Particles: {num_particles}")
-    print(f"  - Policy: HeuristicPolicy (both players)")
-    print(f"  - Discount: 0.95")
+    print("  - Policy: HeuristicPolicy (both players)")
+    print("  - Discount: 0.95")
     print()
 
     # Statistics
@@ -84,23 +84,23 @@ def run_benchmark(
     print("RESULTS")
     print("=" * 70)
 
-    print(f"\nWin Statistics:")
+    print("\nWin Statistics:")
     print(f"  - Player 1 wins: {wins[1]:3d} ({wins[1] / num_games * 100:5.1f}%)")
     print(f"  - Player 2 wins: {wins[2]:3d} ({wins[2] / num_games * 100:5.1f}%)")
     print(f"  - Draws:         {wins[0]:3d} ({wins[0] / num_games * 100:5.1f}%)")
 
-    print(f"\nGame Length:")
+    print("\nGame Length:")
     print(f"  - Average turns: {sum(turn_counts) / len(turn_counts):.1f}")
     print(f"  - Min turns:     {min(turn_counts)}")
     print(f"  - Max turns:     {max(turn_counts)}")
 
-    print(f"\nPerformance:")
+    print("\nPerformance:")
     print(f"  - Total time:    {total_time:.1f}s")
     print(f"  - Average/game:  {sum(game_times) / len(game_times):.2f}s")
     print(f"  - Games/second:  {num_games / total_time:.2f}")
 
     # Nash equilibrium analysis
-    print(f"\nNash Equilibrium Analysis:")
+    print("\nNash Equilibrium Analysis:")
     player1_ratio = wins[1] / num_games
     player2_ratio = wins[2] / num_games
     balance_metric = abs(player1_ratio - player2_ratio)

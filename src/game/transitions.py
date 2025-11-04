@@ -5,7 +5,6 @@ Follows MATH.md §5: State Transition Dynamics
 """
 
 import random
-from typing import Optional
 
 from ..core import Action, DrawAction, GameState, PlayAction, Rank, TopCard
 
