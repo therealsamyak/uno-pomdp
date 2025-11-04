@@ -34,10 +34,9 @@ $$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t, \text{meta}^t) \in \mathcal
 - $H_i^t \subseteq K$: Player $i$'s hand (multiset)
 - $D^t \subseteq K$: Draw deck (multiset, unordered). When drawing, sample uniformly at random from $D^t$.
 - $P^t \subseteq K$: Discard pile (multiset, unordered). The top card $c_{\text{top}}$ is explicitly tracked in $T^t$; the rest $P^t \setminus \{c_{\text{top}}\}$ is unordered.
-- $T^t = (c_{\text{top}}, \tilde{c}) \in K \times (\mathcal{C} \cup \{\perp\})$: Active top card and declared color
+- $T^t = (c_{\text{top}}, \tilde{c}) \in K \times \mathcal{C}$: Active top card and declared color
   - $c_{\text{top}}$ is the card on top of the discard pile (used for playability rules)
-  - If $c_{\text{top}}$ is not wild, then $\tilde{c} = \text{color}(c_{\text{top}})$
-  - If $c_{\text{top}}$ is wild, $\tilde{c} \in \mathcal{C}$ is the declared color
+  - $\tilde{c} \in \mathcal{C}$ is the active/declared color: if $c_{\text{top}}$ is not wild, then $\tilde{c} = \text{color}(c_{\text{top}})$; if $c_{\text{top}}$ is wild, then $\tilde{c}$ is the color declared when it was played
 - $\text{turn}^t \in \{1, 2\}$: Active player
 - $\text{meta}^t = n_{\text{draw}} \in \mathbb{N}_0$: Accumulated draw penalty (from +2 or Wild+4)
 
@@ -47,6 +46,8 @@ $$H_1^t \cup H_2^t \cup D^t \cup P^t = K$$
 
 **Terminal States:**
 $$\mathcal{S}_{\text{term}} = \{s \in \mathcal{S} : |H_1| = 0 \text{ or } |H_2| = 0\}$$
+
+**Note:** Additional termination condition: If during a draw action, after reshuffle $|D^{t+}| < k$ where $k$ is the required draw count, the game terminates immediately. This is handled during transitions, not as a static state property.
 
 ---
 
@@ -68,17 +69,23 @@ $$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t, \text{meta}_{\text{obs}}^t) \in \Omega$$
 $$P(o_t \mid s_t) = \mathbb{1}[\text{proj}(s_t) = o_t]$$
 where $\text{proj}(s_t)$ extracts the visible components from $s_t$.
 
+This filters out impossible states from possible states.
+
 ---
 
 ## 4. Action Space $\mathcal{A}$
 
+**Note:** This action space is defined from Player 1's perspective. Player 2's actions follow the same structure but are part of the opponent model.
+
 $$\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}$$
 
 **Play Actions:**
-$$\mathcal{A}_{\text{play}} = \{(c, \tilde{c}) : c \in H_1^t, \tilde{c} \in \mathcal{C} \cup \{\perp\}\}$$
+$$\mathcal{A}_{\text{play}} = \{(c, \tilde{c}) : c \in H_1^t, \tilde{c} \in \mathcal{C}\}$$
 
-- For non-wild cards $c$: $\tilde{c}$ is ignored (set to $\perp$)
-- For wild cards $c$: $\tilde{c} \in \mathcal{C}$ is the declared color
+- For non-wild cards $c$: $\tilde{c}$ must equal $\text{color}(c)$ (the card's inherent color)
+- For wild cards $c$: $\tilde{c} \in \mathcal{C}$ is the declared color chosen by the player (e.g., "Wild+4 blue" means $\tilde{c} = \text{blue}$)
+
+Every play action always includes a color declaration: either the card's inherent color (non-wild) or the player's choice (wild).
 
 **Draw Actions:**
 $$\mathcal{A}_{\text{draw}} = \{\text{Draw}\}$$
@@ -87,16 +94,26 @@ $$\mathcal{A}_{\text{draw}} = \{\text{Draw}\}$$
 
 **Legal Action Set:**
 
-For state $s_t$ with Player 1's turn ($\text{turn}^t = 1$), define $\mathcal{A}_{\text{legal}}(s_t) \subseteq \mathcal{A}$:
+For any state $s_t$ with active player $i$ ($\text{turn}^t = i$), define $\mathcal{A}_{\text{legal}}(s_t) \subseteq \mathcal{A}$ (symmetric for both players):
+
+First, define the set of playable card actions:
+$$\mathcal{A}_{\text{playable}}(s_t) = \{(c, \tilde{c}) : c \in H_i^t, \text{playable}(c, T^t), \tilde{c} = \text{color}(c) \text{ if } \text{rank}(c) \notin \mathcal{W}, \tilde{c} \in \mathcal{C} \text{ if } \text{rank}(c) \in \mathcal{W}\}$$
+
+Then the legal action set is:
 
 $$
 \mathcal{A}_{\text{legal}}(s_t) = \begin{cases}
-\{(c, \tilde{c}) : c \in H_1^t, \text{playable}(c, T^t)\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} = 0 \\
-\{\text{Draw}\} & \text{if } n_{\text{draw}} > 0
+\{\text{Draw}\} & \text{if } n_{\text{draw}} > 0 \text{ (penalty active, must draw)} \\
+\mathcal{A}_{\text{playable}}(s_t) & \text{if } n_{\text{draw}} = 0 \text{ and } \mathcal{A}_{\text{playable}}(s_t) \neq \emptyset \text{ (can only play if playable cards exist)} \\
+\{\text{Draw}\} & \text{if } n_{\text{draw}} = 0 \text{ and } \mathcal{A}_{\text{playable}}(s_t) = \emptyset \text{ (no playable cards, must draw)}
 \end{cases}
 $$
 
-where
+where $H_i^t$ is the hand of the active player (Player 1 if $\text{turn}^t = 1$, Player 2 if $\text{turn}^t = 2$).
+
+**Rule:** You can only draw if you have no playable cards (or if a draw penalty is active).
+
+The playability function is:
 
 $$
 \text{playable}(c, T) = \begin{cases}
@@ -109,7 +126,7 @@ $$
 
 **2-Player Special Rules:**
 
-- Reverse acts as Skip (ends turn immediately)
+- Reverse acts as Skip: In 2-player UNO, both Skip and Reverse end the current player's turn immediately and pass to the opponent (no additional turn for the player who played it)
 - No stacking of draw penalties: When $n_{\text{draw}} > 0$, only Draw is legal (cannot play +2 or Wild+4 to increase penalty)
 - No challenging Wild+4
 
@@ -130,6 +147,7 @@ If $a_t = \text{Draw}$:
 2. If $|D^t| < k$: **Reshuffle**
    - Combine discard (except top card) with deck: $D^{t+} = (P^t \setminus \{c_{\text{top}}\}) \cup D^t$
    - Set $P^{t+} = \{c_{\text{top}}\}$
+   - If $|D^{t+}| < k$: **Game ends** (impossible to draw $k$ cards - terminal state). The player with the least number of cards in their hand wins. If tied, the game is a draw.
      Else: $D^{t+} = D^t$, $P^{t+} = P^t$
 3. Since $D^{t+}$ is unordered (multiset), sample $k$ cards uniformly at random without replacement from $D^{t+}$: $\{d_1, \ldots, d_k\}$
    - Each $k$-subset of $D^{t+}$ has equal probability $\frac{1}{\binom{|D^{t+}|}{k}}$
@@ -140,13 +158,12 @@ If $a_t = \text{Draw}$:
 **Playing a card $(c, \tilde{c})$:**
 
 1. Remove from hand: $H_1^{t+} = H_1^t \setminus \{c\}$
-2. Update top card: $T^{t+} = (c, \tilde{c}')$ where
-   $$\tilde{c}' = \begin{cases} \tilde{c} & \text{if } \text{rank}(c) \in \mathcal{W} \\ \text{color}(c) & \text{otherwise} \end{cases}$$
+2. Update top card: $T^{t+} = (c, \tilde{c})$ (use the declared color from the action)
 3. Add to discard: $P^{t+} = P^t \cup \{c\}$
 4. Handle card effects:
    - **+2**: $n_{\text{draw}}^{t+} = n_{\text{draw}}^t + 2$, $\text{turn}^{t+} = 2$
    - **Wild+4**: $n_{\text{draw}}^{t+} = n_{\text{draw}}^t + 4$, $\text{turn}^{t+} = 2$
-   - **Skip or Reverse**: $\text{turn}^{t+} = 1$ (Player 1 keeps turn)
+   - **Skip or Reverse**: $\text{turn}^{t+} = 2$ (Player 1's turn ends immediately, Player 2's turn)
    - **Number or Wild**: $\text{turn}^{t+} = 2$
 
 State after Player 1's action: $s^{t+} = (H_1^{t+}, H_2^t, D^{t+}, P^{t+}, T^{t+}, \text{turn}^{t+}, \text{meta}^{t+})$
@@ -157,14 +174,37 @@ If $\text{turn}^{t+} = 2$ and $|H_2^{t+}| > 0$:
 
 Player 2 selects action $a_2 \sim \pi_2(\cdot \mid s^{t+})$ from $\mathcal{A}_{\text{legal}}(s^{t+})$.
 
-**Player 2's transitions follow the same rules as Player 1** (Section 5.1), but applied to Player 2:
+**Player 2's transitions follow the same structure as Player 1** (Section 5.1), but applied to Player 2:
 
-- If $a_2 = \text{Draw}$: Draw $k = \max(1, n_{\text{draw}})$ cards, reset penalty, set $\text{turn} = 1$
-- If $a_2 = (c, \tilde{c})$: Remove $c$ from $H_2$, update $T$ and $P$, handle card effects, set turn accordingly
+**Drawing:**
+If $a_2 = \text{Draw}$:
+
+1. Determine draw count: $k = \max(1, n_{\text{draw}})$
+2. If $|D^{t+}| < k$: **Reshuffle**
+   - Combine discard (except top card) with deck: $D^{t+1} = (P^{t+} \setminus \{c_{\text{top}}^{t+}\}) \cup D^{t+}$
+   - Set $P^{t+1} = \{c_{\text{top}}^{t+}\}$
+   - If $|D^{t+1}| < k$: **Game ends** (impossible to draw $k$ cards - terminal state). The player with the least number of cards in their hand wins. If tied, the game is a draw.
+     Else: $D^{t+1} = D^{t+}$, $P^{t+1} = P^{t+}$
+3. Since $D^{t+1}$ is unordered (multiset), sample $k$ cards uniformly at random without replacement from $D^{t+1}$: $\{d_1, \ldots, d_k\}$
+   - Each $k$-subset of $D^{t+1}$ has equal probability $\frac{1}{\binom{|D^{t+1}|}{k}}$
+4. Update: $H_2^{t+1} = H_2^{t+} \cup \{d_1, \ldots, d_k\}$, $D^{t+1} = D^{t+1} \setminus \{d_1, \ldots, d_k\}$
+5. Reset penalty: $n_{\text{draw}}^{t+1} = 0$
+6. **Forced end turn**: $\text{turn}^{t+1} = 1$
+
+**Playing a card $(c, \tilde{c})$:**
+
+1. Remove from hand: $H_2^{t+1} = H_2^{t+} \setminus \{c\}$
+2. Update top card: $T^{t+1} = (c, \tilde{c})$ (use the declared color from the action)
+3. Add to discard: $P^{t+1} = P^{t+} \cup \{c\}$
+4. Handle card effects:
+   - **+2**: $n_{\text{draw}}^{t+1} = n_{\text{draw}}^{t+} + 2$, $\text{turn}^{t+1} = 1$
+   - **Wild+4**: $n_{\text{draw}}^{t+1} = n_{\text{draw}}^{t+} + 4$, $\text{turn}^{t+1} = 1$
+   - **Skip or Reverse**: $\text{turn}^{t+1} = 1$ (Player 2's turn ends immediately, Player 1's turn)
+   - **Number or Wild**: $\text{turn}^{t+1} = 1$
 
 After Player 2's action completes, the resulting state is $s_{t+1}$.
 
-**Terminal Check:** After any player's action, if $|H_1| = 0$ or $|H_2| = 0$, the game terminates.
+**Terminal Check:** The game terminates **immediately** when a player plays their last card, reducing their hand size to 0. This is checked immediately after the action that empties the hand, before any turn transitions.
 
 The opponent policy $\pi_2$ is a probability distribution over legal actions. Common models:
 
@@ -175,10 +215,12 @@ $$\pi_2^{\text{unif}}(a \mid s) = \frac{\mathbb{1}[a \in \mathcal{A}_{\text{lega
 
 $$
 \pi_2^{\text{greedy}}(a \mid s) = \begin{cases}
-\frac{\mathbb{1}[a \in \mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s)]}{|\mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s)|} & \text{if } \mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s) \neq \emptyset \\
-1 & \text{if } a = \text{Draw}
+\frac{\mathbb{1}[a \in \mathcal{A}_{\text{playable}}(s)]}{|\mathcal{A}_{\text{playable}}(s)|} & \text{if } \mathcal{A}_{\text{playable}}(s) \neq \emptyset \\
+1 & \text{if } a = \text{Draw} \text{ and } \mathcal{A}_{\text{playable}}(s) = \emptyset
 \end{cases}
 $$
+
+This policy uniformly randomizes over playable cards when available, otherwise draws.
 
 ### 5.3. Transition Probability
 
@@ -247,7 +289,9 @@ $$b_{t+1}(s') = \frac{P(o_{t+1} \mid s') \cdot \bar{b}_{t+1}(s')}{\sum_{\tilde{s
 
 ### 7.3. Opponent Play Observation
 
-When Player 2 plays card $c_2$ (observed in $o_{t+1}$ via $T^{t+1} = (c_2, \tilde{c}_2)$ and $n_2^{t+1} = n_2^t - 1$):
+Player 2's action is inferred from observations $o_t$ and $o_{t+1}$:
+
+- **If $T^{t+1} \neq T^t$ (top card changed in observations) AND $n_2^{t+1} = n_2^t - 1$ (opponent hand size decreased by 1)**: Player 2 played card $c_2$ where $T^{t+1} = (c_2, \tilde{c}_2)$ from observation $o_{t+1}$
 
 For each hypothesis $H_2$ in belief support, the likelihood is:
 $$P(\text{play } c_2 \mid H_2, s^{t+}) = \mathbb{1}[c_2 \in H_2] \cdot \pi_2((c_2, \tilde{c}_2) \mid s^{t+})$$
@@ -257,7 +301,11 @@ $$b_{t+1}(H_2') \propto \sum_{H_2 : H_2 \setminus \{c_2\} = H_2'} P(\text{play }
 
 ### 7.4. Opponent Draw Observation
 
-When Player 2 draws $k$ cards (inferred from $n_2^{t+1} = n_2^t + k$ and no card played, i.e., $T^{t+1} = T^t$):
+Player 2's draw is inferred from observations $o_t$ and $o_{t+1}$:
+
+- **If $T^{t+1} = T^t$ (top card unchanged in observations) AND $n_2^{t+1} > n_2^t$ (opponent hand size increased)**: Player 2 drew $k = n_2^{t+1} - n_2^t$ cards
+
+**Note:** These two cases are mutually exclusive - either a card was played (top card changes) or cards were drawn (top card unchanged, hand size increases).
 
 For each prior hypothesis $H_2$ with $|H_2| = n_2$:
 $$P(H_2' \mid H_2, \text{draw } k) = \frac{\mathbb{1}[H_2' \supseteq H_2, |H_2' \setminus H_2| = k, H_2' \setminus H_2 \subseteq U_t \setminus H_2]}{\binom{|U_t \setminus H_2|}{k}}$$
@@ -280,7 +328,7 @@ At $t = 0$, the game is initialized as follows:
 3. **Initial State:** $s_0 = (H_1^0, H_2^0, D^0, P^0, T^0, \text{turn}^0 = 1, n_{\text{draw}}^0 = 0)$
    - $D^0 = K \setminus (H_1^0 \cup H_2^0 \cup \{c_{\text{top}}^0\})$ (remaining deck)
    - $P^0 = \{c_{\text{top}}^0\}$ (discard pile contains only top card)
-   - $T^0 = (c_{\text{top}}^0, \text{color}(c_{\text{top}}^0))$ (or declared color if wild)
+   - $T^0 = (c_{\text{top}}^0, \text{color}(c_{\text{top}}^0))$ (since $c_{\text{top}}^0$ is not wild, $\tilde{c} = \text{color}(c_{\text{top}}^0)$)
 
 ### 8.2. Initial Belief Distribution
 
@@ -291,7 +339,7 @@ $$b_0(s) \propto \mathbb{1}[\text{s is consistent with } (H_1^0, T^0, P^0 = \{c_
 Specifically, for the unseen pool $U_0$ with $|U_0| = m_0$:
 $$b_0^H(H_2) = \frac{\mathbb{1}[H_2 \subseteq U_0, |H_2| = 7]}{\binom{m_0}{7}}$$
 
-and draw deck is uniformly distributed as multiset $D^0 = U_0 \setminus H_2$.
+For each possible $H_2$, the draw deck is deterministically $D^0 = U_0 \setminus H_2$ (the complement of $H_2$ in $U_0$). The uniform distribution over all $\binom{m_0}{7}$ possible hands $H_2$ induces a uniform distribution over the corresponding deck configurations.
 
 ---
 
@@ -303,6 +351,9 @@ $$
 R(s', a) = \begin{cases}
 +1 & \text{if } |H_1| = 0 \text{ in state } s' \text{ (Player 1 wins)} \\
 -1 & \text{if } |H_2| = 0 \text{ in state } s' \text{ (Player 2 wins)} \\
++1 & \text{if game ends due to inability to draw and } |H_1| < |H_2| \text{ (Player 1 wins by fewer cards)} \\
+-1 & \text{if game ends due to inability to draw and } |H_2| < |H_1| \text{ (Player 2 wins by fewer cards)} \\
+0 & \text{if game ends due to inability to draw and } |H_1| = |H_2| \text{ (draw)} \\
 0 & \text{otherwise}
 \end{cases}
 $$
