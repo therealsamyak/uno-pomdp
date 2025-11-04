@@ -1,5 +1,8 @@
-def main():
-    print("Hello from uno-pomdp!")
+"""
+Entry point for UNO POMDP solver.
+"""
+
+from src.cli import main
 
 
 if __name__ == "__main__":

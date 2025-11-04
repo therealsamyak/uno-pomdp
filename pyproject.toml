@@ -1,9 +1,12 @@
 [project]
 name = "uno-pomdp"
 version = "0.1.0"
-description = "Add your description here"
+description = "2-Player UNO POMDP Solver with Value Iteration"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "lefthook>=2.0.2",
 ]
+
+[project.scripts]
+uno-pomdp = "src.cli.game_interface:main"
