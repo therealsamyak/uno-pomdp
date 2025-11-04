@@ -3,6 +3,7 @@
 ## 1. Notation and Primitive Sets
 
 **Card Universe**
+
 - Colors: $\mathcal{C} = \{\text{red}, \text{yellow}, \text{blue}, \text{green}\}$
 - Ranks: $\mathcal{R} = \{0, 1, 2, \ldots, 9, \text{Skip}, \text{Reverse}, \text{+2}\}$
 - Wild cards: $\mathcal{W} = \{\text{Wild}, \text{Wild+4}\}$
@@ -14,6 +15,7 @@
   - Wild cards have $\text{color}(k) = \perp$
 
 **Temporal and Logical Primitives**
+
 - Time: $t \in \mathbb{N}_0 = \{0, 1, 2, \ldots\}$
 - Players: $\mathcal{P} = \{1, 2\}$ where Player 1 is the agent
 - Indicator: $\mathbb{1}[\cdot] \in \{0, 1\}$
@@ -26,6 +28,7 @@ A complete state is a tuple:
 $$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t, \text{meta}^t) \in \mathcal{S}$$
 
 **Components:**
+
 - $H_i^t \subseteq K$: Player $i$'s hand (multiset)
 - $D^t = (d_1, d_2, \ldots, d_{n_d}) \in K^{n_d}$: Ordered draw deck (top = $d_1$)
 - $P^t = (p_1, p_2, \ldots, p_{n_p}) \in K^{n_p}$: Ordered discard pile (top = $p_{n_p}$, bottom = $p_1$)
@@ -33,7 +36,7 @@ $$s_t = (H_1^t, H_2^t, D^t, P^t, T^t, \text{turn}^t, \text{meta}^t) \in \mathcal
   - If $c_{\text{top}}$ is not wild, then $\tilde{c} = \text{color}(c_{\text{top}})$
   - If $c_{\text{top}}$ is wild, $\tilde{c} \in \mathcal{C}$ is the declared color
 - $\text{turn}^t \in \{1, 2\}$: Active player
-- $\text{meta}^t = (n_{\text{draw}}, \text{dir}) \in \mathbb{N}_0 \times \{1, -1\}$: 
+- $\text{meta}^t = (n_{\text{draw}}, \text{dir}) \in \mathbb{N}_0 \times \{1, -1\}$:
   - $n_{\text{draw}}$: Accumulated draw penalty (from +2 or Wild+4)
   - $\text{dir}$: Direction (irrelevant in 2-player; included for completeness)
 
@@ -52,6 +55,7 @@ Player 1's observation at time $t$:
 $$o_t = (H_1^t, n_2^t, n_d^t, P^t, T^t, \text{meta}_{\text{obs}}^t) \in \Omega$$
 
 **Components:**
+
 - $H_1^t$: Player 1's hand (fully observed)
 - $n_2^t = |H_2^t| \in \mathbb{N}_0$: Opponent's hand size
 - $n_d^t = |D^t| \in \mathbb{N}_0$: Draw deck size
@@ -71,31 +75,39 @@ $$\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}$$
 
 **Play Actions:**
 $$\mathcal{A}_{\text{play}} = \{(c, \tilde{c}) : c \in H_1^t, \tilde{c} \in \mathcal{C} \cup \{\perp\}\}$$
+
 - For non-wild cards $c$: $\tilde{c}$ is ignored (set to $\perp$)
 - For wild cards $c$: $\tilde{c} \in \mathcal{C}$ is the declared color
 
 **Draw Actions:**
 $$\mathcal{A}_{\text{draw}} = \{\text{Draw}\}$$
+
 - Draws one card normally, or $n_{\text{draw}}$ cards if penalty is active
 
 **Legal Action Set:**
 
 For state $s_t$ with Player 1's turn ($\text{turn}^t = 1$), define $\mathcal{A}_{\text{legal}}(s_t) \subseteq \mathcal{A}$:
 
-$$\mathcal{A}_{\text{legal}}(s_t) = \begin{cases}
+$$
+\mathcal{A}_{\text{legal}}(s_t) = \begin{cases}
 \{(c, \tilde{c}) : c \in H_1^t, \text{playable}(c, T^t)\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} = 0 \\
 \{(c, \perp) : c \in H_1^t, \text{rank}(c) \in \{\text{+2}, \text{Wild+4}\}\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} > 0
-\end{cases}$$
+\end{cases}
+$$
 
 where
-$$\text{playable}(c, T) = \begin{cases}
+
+$$
+\text{playable}(c, T) = \begin{cases}
 \text{true} & \text{if } \text{rank}(c) \in \mathcal{W} \\
 \text{true} & \text{if } \text{color}(c) = \tilde{c} \text{ (declared color in } T) \\
 \text{true} & \text{if } \text{rank}(c) = \text{rank}(c_{\text{top}}) \\
 \text{false} & \text{otherwise}
-\end{cases}$$
+\end{cases}
+$$
 
 **2-Player Special Rules:**
+
 - Reverse acts as Skip (ends turn immediately)
 - No stacking of draw penalties
 - No challenging Wild+4
@@ -112,6 +124,7 @@ Given state $s_t$ with $\text{turn}^t = 1$ and action $a_t \in \mathcal{A}_{\tex
 
 **Drawing:**
 If $a_t = \text{Draw}$:
+
 1. Determine draw count: $k = \max(1, n_{\text{draw}})$
 2. If $|D^t| < k$: **Reshuffle**
    - Let $D' = \text{shuffle}(p_1, \ldots, p_{n_p - 1})$ (all discard except top)
@@ -122,6 +135,7 @@ If $a_t = \text{Draw}$:
 6. **Forced end turn**: $\text{turn}^{t+} = 2$
 
 **Playing a card $(c, \tilde{c})$:**
+
 1. Remove from hand: $H_1^{t+} = H_1^t \setminus \{c\}$
 2. Update top card: $T^{t+} = (c, \tilde{c}')$ where
    $$\tilde{c}' = \begin{cases} \tilde{c} & \text{if } \text{rank}(c) \in \mathcal{W} \\ \text{color}(c) & \text{otherwise} \end{cases}$$
@@ -146,10 +160,13 @@ The opponent policy $\pi_2$ is a probability distribution over legal actions. Co
 $$\pi_2^{\text{unif}}(a \mid s) = \frac{\mathbb{1}[a \in \mathcal{A}_{\text{legal}}(s)]}{|\mathcal{A}_{\text{legal}}(s)|}$$
 
 **Greedy (prefer plays over draws):**
-$$\pi_2^{\text{greedy}}(a \mid s) = \begin{cases}
+
+$$
+\pi_2^{\text{greedy}}(a \mid s) = \begin{cases}
 \frac{\mathbb{1}[a \in \mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s)]}{|\mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s)|} & \text{if } \mathcal{A}_{\text{play}} \cap \mathcal{A}_{\text{legal}}(s) \neq \emptyset \\
 1 & \text{if } a = \text{Draw}
-\end{cases}$$
+\end{cases}
+$$
 
 ### 5.3. Transition Probability
 
@@ -158,11 +175,15 @@ For complete transition from $s_t$ to $s_{t+1}$ given Player 1 action $a_t$:
 $$P(s_{t+1} \mid s_t, a_t) = \sum_{s^{t+}} \sum_{a_2} P(s_{t+1} \mid s^{t+}, a_2) \cdot \pi_2(a_2 \mid s^{t+}) \cdot P(s^{t+} \mid s_t, a_t)$$
 
 where:
+
 - $P(s^{t+} \mid s_t, a_t)$ is deterministic given draw randomness:
-  $$P(s^{t+} \mid s_t, a_t) = \begin{cases}
+
+  $$
+  P(s^{t+} \mid s_t, a_t) = \begin{cases}
   \frac{1}{|D^t|!} & \text{if reshuffle occurs (uniform over permutations)} \\
   1 & \text{otherwise (deterministic)}
-  \end{cases}$$
+  \end{cases}
+  $$
 
 - $P(s_{t+1} \mid s^{t+}, a_2)$ similarly accounts for Player 2's draw randomness
 
@@ -256,11 +277,13 @@ and draw deck is uniformly distributed over $(m_0 - 7)!$ permutations of $U_0 \s
 
 Define immediate reward for Player 1:
 
-$$R(s, a) = \begin{cases}
+$$
+R(s, a) = \begin{cases}
 +1 & \text{if } s \text{ results in } |H_1| = 0 \text{ (Player 1 wins)} \\
 -1 & \text{if } s \text{ results in } |H_2| = 0 \text{ (Player 2 wins)} \\
 0 & \text{otherwise}
-\end{cases}$$
+\end{cases}
+$$
 
 Expected reward under belief:
 $$R(b_t, a_t) = \sum_{s \in \mathcal{S}} b_t(s) \cdot R(s, a_t)$$
@@ -348,6 +371,7 @@ For computational efficiency, approximate $V(b)$ with hand-crafted heuristics:
 $$V_{\text{heur}}(b) = \alpha_1 \cdot (n_2 - |H_1|) + \alpha_2 \cdot f_{\text{playable}}(b) + \alpha_3 \cdot f_{\text{wild}}(H_1)$$
 
 where:
+
 - $n_2 - |H_1|$: Hand size difference
 - $f_{\text{playable}}(b)$: Expected playable cards in opponent's hand (negative weight)
 - $f_{\text{wild}}(H_1)$: Number of wild cards held (positive weight)
@@ -360,6 +384,7 @@ The 2-Player UNO POMDP from Player 1's perspective is formally:
 $$\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{T}, \mathcal{R}, \Omega, \mathcal{O}, b_0, \gamma)$$
 
 where:
+
 - $\mathcal{S}$: State space (§2)
 - $\mathcal{A}$: Action space with legal action function (§4)
 - $\mathcal{T}$: Transition dynamics $P(s' \mid s, a)$ (§5)
