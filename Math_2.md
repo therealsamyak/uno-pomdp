@@ -62,41 +62,28 @@ $$\mathcal{A} = \mathcal{A}_{\text{play}} \cup \mathcal{A}_{\text{draw}}$$
 **Play Actions:**
 $$\mathcal{A}_{\text{play}} = c$$
 
-- For non-wild cards $c$: $\tilde{c}$ is ignored (set to $\perp$)
-- For wild cards $c$: $\tilde{c} \in \mathcal{C}$ is the declared color
-
 **Draw Actions:**
 $$\mathcal{A}_{\text{draw}} = \{\text{Draw}\}$$
 
-- Draws one card normally, or $n_{\text{draw}}$ cards if penalty is active
-
+- Draws one card normally
+- 
 **Legal Action Set:**
 
 For state $s_t$ with Player 1's turn ($\text{turn}^t = 1$), define $\mathcal{A}_{\text{legal}}(s_t) \subseteq \mathcal{A}$:
 
 $$
-\mathcal{A}_{\text{legal}}(s_t) = \begin{cases}
-\{(c, \tilde{c}) : c \in H_1^t, \text{playable}(c, T^t)\} \cup \{\text{Draw}\} & \text{if } n_{\text{draw}} = 0 \\
-\{\text{Draw}\} & \text{if } n_{\text{draw}} > 0
-\end{cases}
+\mathcal{A}_{\text{legal}}(s_t) =
 $$
 
 where
 
 $$
-\text{playable}(c, T) = \begin{cases}
-\text{true} & \text{if } \text{rank}(c) \in \mathcal{W} \\
-\text{true} & \text{if } \text{color}(c) = \tilde{c} \text{ (declared color in } T) \\
-\text{true} & \text{if } \text{rank}(c) = \text{rank}(c_{\text{top}}) \\
-\text{false} & \text{otherwise}
 \end{cases}
 $$
 
 **2-Player Special Rules:**
 
-- Reverse acts as Skip (ends turn immediately)
-- No stacking of draw penalties: When $n_{\text{draw}} > 0$, only Draw is legal (cannot play +2 or Wild+4 to increase penalty)
-- No challenging Wild+4
+- We only consider numbers and colors cards for this game.
 
 ---
 
